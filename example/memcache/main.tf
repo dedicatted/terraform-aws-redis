@@ -1,18 +1,14 @@
 provider "aws" {
-  region = local.region
+  region = var.region
 }
-locals {
-  name        = "memcache"
-  environment = "test"
-  region      = var.region
-}
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
 module "vpc" {
   source                             = "github.com/terraform-aws-modules/terraform-aws-vpc"
-  name                               = var.vpc_name
+  name                               = "${var.name}-vpc"
   cidr                               = var.cidr_block
   azs                                = slice(data.aws_availability_zones.available.names, 0, 3)
   database_subnets                   = [cidrsubnet(var.cidr_block, 8, 6), cidrsubnet(var.cidr_block, 8, 7), cidrsubnet(var.cidr_block, 8, 8)]
@@ -21,10 +17,9 @@ module "vpc" {
 }
 
 module "memcached" {
-  source = "github.com/dedicatted/terraform-aws-redis"
-
-  name                 = local.name
-  environment          = local.environment
+  source               = "github.com/dedicatted/terraform-aws-redis"
+  name                 = var.name
+  environment          = var.environment
   vpc_id               = module.vpc.vpc_id
   allowed_ip           = [var.cidr_block]
   allowed_ports        = [11211]
@@ -39,7 +34,7 @@ module "memcached" {
   subnet_ids           = module.vpc.database_subnets
   availability_zones   = slice(data.aws_availability_zones.available.names, 0, 3)
   tags = {
-    "environment" = local.environment
+    "environment" = var.environment
   }
 
 }
