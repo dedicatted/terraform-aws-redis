@@ -21,8 +21,7 @@ module "vpc" {
 }
 
 module "redis-cluster" {
-  source = "/home/user/terraform-aws-redis"
-
+  source                      = "github.com/dedicatted/terraform-aws-redis"
   name                        = local.name
   environment                 = local.environment
   vpc_id                      = module.vpc.vpc_id

@@ -20,9 +20,7 @@ module "vpc" {
   create_database_subnet_route_table = true
 }
 module "redis" {
-  source = "/home/user/terraform-aws-redis"
-
-
+  source                      = "github.com/dedicatted/terraform-aws-redis"
   name                        = local.name
   environment                 = local.environment
   vpc_id                      = module.vpc.vpc_id

@@ -4,7 +4,7 @@ This module used for creation any entety which enabled in AWS Elasticache (Redis
 Memcached
 ```hcl
 module "memcached" {
-  source = "/home/user/terraform-aws-redis"
+  source = "github.com/dedicatted/terraform-aws-redis"
 
   name        = "example"
   environment = "example"
@@ -30,7 +30,7 @@ module "memcached" {
 Redis
 ```hcl
 module "redis" {
-  source = "/home/user/terraform-aws-redis"
+  source = "github.com/dedicatted/terraform-aws-redis"
 
 
   name        = "example"
@@ -73,7 +73,7 @@ module "redis" {
 Redis-cluster
 ```hcl
 module "redis-cluster" {
-  source = "/home/user/terraform-aws-redis"
+  source = "github.com/dedicatted/terraform-aws-redis"
 
   name        = "example"
   environment = "example"

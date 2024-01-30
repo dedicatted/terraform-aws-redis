@@ -21,7 +21,7 @@ module "vpc" {
 }
 
 module "memcached" {
-  source = "/home/user/terraform-aws-redis"
+  source = "github.com/dedicatted/terraform-aws-redis"
 
   name                 = local.name
   environment          = local.environment
