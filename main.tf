@@ -62,15 +62,6 @@ resource "aws_cloudwatch_log_group" "aws_cloudwatch_log_group" {
   tags              = var.tags
 }
 
-resource "aws_elasticache_subnet_group" "aws_elasticache_subnet_group" {
-  count       = var.enable ? 1 : 0
-  name        = format("%s-subnet-group", var.name)
-  subnet_ids  = var.subnet_ids
-  description = var.subnet_group_description
-
-  tags = var.tags
-}
-
 resource "random_password" "auth_token" {
   count   = var.auth_token_enable && var.auth_token == null ? 1 : 0
   length  = var.length
@@ -88,7 +79,7 @@ resource "aws_elasticache_replication_group" "cluster_replication" {
   parameter_group_name       = var.parameter_group_name
   node_type                  = var.node_type
   automatic_failover_enabled = var.automatic_failover_enabled
-  subnet_group_name          = join("", aws_elasticache_subnet_group.aws_elasticache_subnet_group[*].name)
+  subnet_group_name          = var.subnet_group_names
   security_group_ids         = length(var.sg_ids) < 1 ? aws_security_group.security_group[*].id : var.sg_ids
   security_group_names       = var.security_group_names
   snapshot_arns              = var.snapshot_arns
@@ -103,7 +94,7 @@ resource "aws_elasticache_replication_group" "cluster_replication" {
   transit_encryption_enabled = var.transit_encryption_enabled
   multi_az_enabled           = var.multi_az_enabled
   auth_token                 = var.auth_token_enable ? (var.auth_token == null ? random_password.auth_token[0].result : var.auth_token) : null
-  kms_key_id                 = var.kms_key_id == "" ? join("", module.aws_kms_key[0].key_arn) : var.kms_key_id
+  kms_key_id                 = var.kms_key_id == "" ? join("", module.aws_kms_key[*].key_arn) : var.kms_key_id
   tags                       = var.tags
   num_cache_clusters         = var.num_cache_clusters
   user_group_ids             = var.user_group_ids
@@ -130,7 +121,7 @@ resource "aws_elasticache_cluster" "cluster" {
   az_mode                      = var.az_mode
   parameter_group_name         = var.parameter_group_name
   node_type                    = var.node_type
-  subnet_group_name            = join("", aws_elasticache_subnet_group.aws_elasticache_subnet_group[*].name)
+  subnet_group_name            = var.subnet_group_names
   security_group_ids           = length(var.sg_ids) < 1 ? aws_security_group.security_group[*].id : var.sg_ids
   snapshot_arns                = var.snapshot_arns
   snapshot_name                = var.snapshot_name

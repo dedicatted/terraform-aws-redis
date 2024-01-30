@@ -45,7 +45,7 @@ variable "port" {
 
 variable "user_group_ids" {
   type        = list(string)
-  default     = [""]
+  default     = null
   description = "User Group ID to associate with the replication group."
 }
 
@@ -106,10 +106,10 @@ variable "subnet_ids" {
   sensitive   = true
 }
 
-variable "subnet_group_description" {
+variable "subnet_group_names" {
   type        = string
-  default     = "The Description of the ElastiCache Subnet Group."
-  description = "Description for the cache subnet group. Defaults to `Managed by Terraform`."
+  default     = "One, two, three"
+  description = "Name for the cache subnet group. Defaults to `Managed by Terraform`."
 }
 variable "replication_group_description" {
   type        = string

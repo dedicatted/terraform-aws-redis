@@ -4,55 +4,51 @@ This module used for creation any entety which enabled in AWS Elasticache (Redis
 Memcached
 ```hcl
 module "memcached" {
-  source = "github.com/dedicatted/terraform-aws-redis"
-
-  name        = "example"
-  environment = "example"
-  vpc_id        = "vpc-12312312"
-  allowed_ip    = ["192.168.0.12"]
-  allowed_ports = [11211]
-
-  cluster_enabled                          = true
-  engine                                   = "memcached"
-  engine_version                           = "1.6.17"
-  parameter_group_name                     = ""
-  az_mode                                  = "cross-az"
-  port                                     = 11211
-  node_type                                = "cache.t2.micro"
-  num_cache_nodes                          = 2
-  subnet_ids                               = "sub-123123213"
-  availability_zones                       = slice(data.aws_availability_zones.available.names, 0, 3)
-  tags ={
-    "environment" = "example"
+  source               = "github.com/dedicatted/terraform-aws-redis"
+  name                 = "${var.name}-memcached"
+  environment          = var.environment
+  vpc_id               = module.vpc.vpc_id
+  allowed_ip           = [var.cidr_block]
+  allowed_ports        = [11211]
+  cluster_enabled      = true
+  engine               = "memcached"
+  engine_version       = "1.6.17"
+  parameter_group_name = ""
+  az_mode              = "cross-az"
+  port                 = 11211
+  node_type            = "cache.t2.micro"
+  num_cache_nodes      = 2
+  subnet_group_names   = module.vpc.elasticache_subnet_group_name
+  subnet_ids           = module.vpc.elasticache_subnets
+  availability_zones   = slice(data.aws_availability_zones.available.names, 0, 3)
+  tags = {
+    "environment" = var.environment
   }
 }
 ```
 Redis
 ```hcl
 module "redis" {
-  source = "github.com/dedicatted/terraform-aws-redis"
-
-
-  name        = "example"
-  environment = "example"
-  vpc_id        = "vpc-12312312"
-  allowed_ip    = ["192.168.0.12"]
-  allowed_ports = [6379]
-
+  source                      = "github.com/dedicatted/terraform-aws-redis"
+  name                        = "${var.name}-redis"
+  environment                 = var.environment
+  vpc_id                      = module.vpc.vpc_id
+  allowed_ip                  = [var.cidr_block]
+  allowed_ports               = [6379]
   cluster_replication_enabled = true
   engine                      = "redis"
   engine_version              = "7.0"
   parameter_group_name        = "default.redis7"
   port                        = 6379
   node_type                   = "cache.t2.micro"
-  subnet_ids                  = "sub-123123213"
+  subnet_group_names          = module.vpc.elasticache_subnet_group_name
+  subnet_ids                  = module.vpc.elasticache_subnets
   availability_zones          = slice(data.aws_availability_zones.available.names, 0, 3)
   automatic_failover_enabled  = false
   multi_az_enabled            = false
   num_cache_clusters          = 1
   retention_in_days           = 0
   snapshot_retention_limit    = 7
-
   log_delivery_configuration = [
     {
       destination_type = "cloudwatch-logs"
@@ -65,35 +61,34 @@ module "redis" {
       log_type         = "engine-log"
     }
   ]
-  tags ={
-    "environment" = "example"
+  tags = {
+    "environment" = var.environment
   }
 }
 ```
 Redis-cluster
 ```hcl
 module "redis-cluster" {
-  source = "github.com/dedicatted/terraform-aws-redis"
-
-  name        = "example"
-  environment = "example"
-  vpc_id        = "vpc-12312312"
-  allowed_ip    = ["192.168.0.12"]
-  allowed_ports = [6379]
-
+  source                      = "github.com/dedicatted/terraform-aws-redis"
+  name                        = "${var.name}-redis-cluster"
+  environment                 = var.environment
+  vpc_id                      = module.vpc.vpc_id
+  allowed_ip                  = [var.cidr_block]
+  allowed_ports               = [6379]
   cluster_replication_enabled = true
   engine                      = "redis"
   engine_version              = "7.0"
   parameter_group_name        = "default.redis7.cluster.on"
   port                        = 6379
   node_type                   = "cache.t2.micro"
-  subnet_ids                  = "sub-123123213"
+  subnet_group_names          = module.vpc.elasticache_subnet_group_name
+  subnet_ids                  = module.vpc.elasticache_subnets
   availability_zones          = slice(data.aws_availability_zones.available.names, 0, 3)
   num_cache_nodes             = 1
   snapshot_retention_limit    = 7
   automatic_failover_enabled  = true
   tags = {
-    "environment" = "example"
+    "environment" = var.environment
   }
 }
 ```
@@ -126,7 +121,6 @@ module "redis-cluster" {
 | [aws_cloudwatch_log_group.aws_cloudwatch_log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_elasticache_cluster.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_cluster) | resource |
 | [aws_elasticache_replication_group.cluster_replication](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group) | resource |
-| [aws_elasticache_subnet_group.aws_elasticache_subnet_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_subnet_group) | resource |
 | [aws_security_group.security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group_rule.egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.egress_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
@@ -186,11 +180,11 @@ module "redis-cluster" {
 | <a name="input_snapshot_retention_limit"></a> [snapshot\_retention\_limit](#input\_snapshot\_retention\_limit) | (Redis only) The number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off. Please note that setting a snapshot\_retention\_limit is not supported on cache.t1.micro or cache.t2.* cache nodes. | `string` | `"0"` | no |
 | <a name="input_snapshot_window"></a> [snapshot\_window](#input\_snapshot\_window) | (Redis only) The daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your cache cluster. The minimum snapshot window is a 60 minute period. | `string` | `null` | no |
 | <a name="input_special"></a> [special](#input\_special) | n/a | `bool` | `false` | no |
-| <a name="input_subnet_group_description"></a> [subnet\_group\_description](#input\_subnet\_group\_description) | Description for the cache subnet group. Defaults to `Managed by Terraform`. | `string` | `"The Description of the ElastiCache Subnet Group."` | no |
+| <a name="input_subnet_group_names"></a> [subnet\_group\_names](#input\_subnet\_group\_names) | Name for the cache subnet group. Defaults to `Managed by Terraform`. | `string` | `"One, two, three"` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | List of VPC Subnet IDs for the cache subnet group. | `list(any)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags for all resource which created by this module | `map(any)` | n/a | yes |
 | <a name="input_transit_encryption_enabled"></a> [transit\_encryption\_enabled](#input\_transit\_encryption\_enabled) | Whether to enable encryption in transit. | `bool` | `true` | no |
-| <a name="input_user_group_ids"></a> [user\_group\_ids](#input\_user\_group\_ids) | User Group ID to associate with the replication group. | `list(string)` | <pre>[<br>  ""<br>]</pre> | no |
+| <a name="input_user_group_ids"></a> [user\_group\_ids](#input\_user\_group\_ids) | User Group ID to associate with the replication group. | `list(string)` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The ID of the VPC that the instance security group belongs to. | `string` | `""` | no |
 
 ## Outputs
